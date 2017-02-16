@@ -4,6 +4,8 @@ import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
 import akka.actor.Props
 
+import akka.routing._
+
 object SimpleClusterApp {
   def main(args: Array[String]): Unit = {
     if (args.isEmpty)
@@ -21,9 +23,12 @@ object SimpleClusterApp {
       // Create an Akka system
       val system = ActorSystem("ClusterSystem", config)
       // Create an actor that handles cluster domain events
-      system.actorOf(Props[SimpleClusterListener], name = "clusterListener")
+      val workCreator =
+        if (port == "2551") Some(system.actorOf(Props(new WorkCreatorActor)))
+        else None
+
+      system.actorOf(Props(new SimpleClusterListener(workCreator)), name = "clusterListener")
     }
   }
 
 }
-
